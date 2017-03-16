@@ -28,11 +28,9 @@ public class TitleCanvas : CanvasBase
 		}
 
 		// ボタンのイベント登録
-		StartButton.OnClickAsObservable ()
-            .Subscribe ((_) => Common.Transition.TransitionIn (TransitionManager.Kind.White, Define.Window.TransitionTime, () => {
+		StartButton.OnClickAsObservable ().Subscribe (_ => {
 			SceneManager.LoadScene ("InGame");
-			Common.Transition.TransitionOut (TransitionManager.Kind.White, Define.Window.TransitionTime);
-		}));
+		});
 	}
 
 	#endregion

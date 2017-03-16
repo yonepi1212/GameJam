@@ -36,12 +36,8 @@ public class TitleWindow : WindowBase
 		base.Show ();
 		_startButton.OnClickAsObservable ()
             .Subscribe (_ => {
-			Common.Transition.TransitionIn (TransitionManager.Kind.White, Define.Window.TransitionTime, () => {
-				Common.MainCanvas.TitleWindow.Close ();
-				Common.MainCanvas.InGameWindow.Show ();
-				PlayerPrefs.SetInt ("EpisodeStageUnLockIndex", 1);
-				Common.Transition.TransitionOut (TransitionManager.Kind.White, Define.Window.TransitionTime);
-			});
+			Common.MainCanvas.TitleWindow.Close ();
+			Common.MainCanvas.InGameWindow.Show ();
 		});
 	}
 

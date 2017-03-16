@@ -77,19 +77,6 @@ public static class Common
 		get { return TimeManager.Instance; }
 	}
 
-   
-	// ドロドロトランジションマネージャー
-	private static TransitionManager _transition;
-
-	public static TransitionManager Transition {
-		get {
-			if ( _transition == null ) {
-				var managerObject = GameObject.Find ("transition_manager") ?? PrefabUtility.LoadGameObject ("", "transition_manager");
-				_transition = managerObject.GetComponent<TransitionManager> ();
-			}
-			return _transition;
-		}
-	}
 
 	#endregion
 
