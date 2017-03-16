@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UniRx;
+using UniRx.Triggers;
 
 /*  MainCanvas
     メインキャンバス
@@ -7,6 +10,7 @@ using UnityEngine.SceneManagement;
 public class MainCanvas : CanvasBase
 {
 	#region Declaration
+
 
 	// 二重起動防止用
 	private static MainCanvas _mainCanvasInstance;
@@ -80,6 +84,7 @@ public class MainCanvas : CanvasBase
 		if ( FirstWindow != null ) {
 			WindowShelf.SetBook (FirstWindow).Show ();
 		}
+
 
 	}
 	// OnDestroy

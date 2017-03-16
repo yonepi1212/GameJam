@@ -12,9 +12,10 @@ public class PlayerCharacter : CharacterBase
 
 	private Rigidbody2D _rigidBody;
 
+	bool isJumping = false;
+
 	void Update ()
 	{
-		LogUtility.Log ();
 	}
 
 	public override void Show ()
@@ -31,18 +32,26 @@ public class PlayerCharacter : CharacterBase
 		Observable.EveryUpdate ().Subscribe (_ => {
 
 			_uiCamera.transform.position = new Vector3 (RectTransform.position.x + 4, 0, 0);
+		
 
 		}).AddTo (_uiCamera);
 
 		IObservable<Unit> keydown = this.UpdateAsObservable ();
 
 
-		keydown.Where (key => Input.GetKey (KeyCode.D)).Subscribe (_ => {
-			_rigidBody.AddForce (new Vector2 (100f, 0f));
-			LogUtility.Log ();
-	
 
+		Common.Input.IsLeftKey.ThrottleFirstFrame (2).Subscribe (_ => {
+			_rigidBody.AddForce (new Vector2 (-140f, 0f));
 		});
+
+		Common.Input.IsRightKey.ThrottleFirstFrame (2).Subscribe (_ => {
+			_rigidBody.AddForce (new Vector2 (140f, 0f));
+		});
+
+		Common.Input.IsJumpKey.ThrottleFirstFrame (30).Subscribe (_ => {
+			_rigidBody.AddForce (new Vector2 (0f, 340f));
+		});
+
 
 	}
 

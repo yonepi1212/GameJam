@@ -51,8 +51,8 @@ public class InGameScreen : ScreenBase
 
 
 
-		var homeWindow = Root as InGameWindow;
-		if ( homeWindow != null ) {
+		var ingameWindow = Root as InGameWindow;
+		if ( ingameWindow != null ) {
 
 		}
 

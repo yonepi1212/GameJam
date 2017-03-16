@@ -14,6 +14,9 @@ public class InGameUiScreen : ScreenBase
 	[SerializeField]
 	private RectTransform _stageInfo;
 
+	[SerializeField]
+	private ControlButtons _controllButtons;
+
 
 	#endregion
 
@@ -23,6 +26,9 @@ public class InGameUiScreen : ScreenBase
 	{
 		base.Show ();
 
+		_controllButtons.Show ();
+	
+
 		_stageInfo.gameObject.SetActive (true);
 
 		var waitTime = 5f;
@@ -31,7 +37,7 @@ public class InGameUiScreen : ScreenBase
 		waitTime = 0.5f;
 		#endif
 
-		Observable.Timer (TimeSpan.FromSeconds (1f)).Subscribe (_ => { 
+		Observable.Timer (TimeSpan.FromSeconds (waitTime)).Subscribe (_ => { 
 			_stageInfo.gameObject.SetActive (false);
 		});
 

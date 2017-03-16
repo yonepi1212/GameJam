@@ -77,6 +77,10 @@ public static class Common
 		get { return TimeManager.Instance; }
 	}
 
+	public static InputManager Input {
+		get { return InputManager.Instance; }
+	}
+
 
 	#endregion
 
