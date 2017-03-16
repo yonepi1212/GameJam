@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UniRx;
-using UniRx.Triggers;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +12,9 @@ public class InGameUiScreen : ScreenBase
 	private bool _isInitialize;
 
 	[SerializeField]
-	private ButtonBase _chatButton;
+	private RectTransform _stageInfo;
+
+
 
 
 	#endregion
@@ -24,6 +26,14 @@ public class InGameUiScreen : ScreenBase
 		base.Show ();
 
 		LogUtility.Log ();
+
+		_stageInfo.gameObject.SetActive (true);
+
+
+		Observable.Timer (TimeSpan.FromSeconds (0.5f)).Subscribe (_ => { 
+			_stageInfo.gameObject.SetActive (false);
+		});
+
 
 		var homeWindow = Root as InGameWindow;
 		if ( homeWindow != null ) {
