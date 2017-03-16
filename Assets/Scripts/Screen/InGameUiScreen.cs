@@ -15,8 +15,6 @@ public class InGameUiScreen : ScreenBase
 	private RectTransform _stageInfo;
 
 
-
-
 	#endregion
 
 	#region Public Method
@@ -25,14 +23,20 @@ public class InGameUiScreen : ScreenBase
 	{
 		base.Show ();
 
-		LogUtility.Log ();
-
 		_stageInfo.gameObject.SetActive (true);
 
+		var waitTime = 5f;
 
-		Observable.Timer (TimeSpan.FromSeconds (0.5f)).Subscribe (_ => { 
+		#if UNITY_EDITOR 
+		waitTime = 0.5f;
+		#endif
+
+		Observable.Timer (TimeSpan.FromSeconds (1f)).Subscribe (_ => { 
 			_stageInfo.gameObject.SetActive (false);
 		});
+
+
+
 
 
 		var homeWindow = Root as InGameWindow;

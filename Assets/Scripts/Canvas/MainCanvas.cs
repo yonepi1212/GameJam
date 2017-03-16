@@ -94,7 +94,7 @@ public class MainCanvas : CanvasBase
 	#if DEBUG
 	private void OnGUI ()
 	{
-		if ( GUI.Button (new Rect (0f, 615f, 100f, 25f), "GoTitle") ) {
+		if ( GUI.Button (new Rect (1036f, 0f, 100f, 25f), "GoTitle") ) {
 			SceneManager.LoadScene ("Title");
 		}
 	}

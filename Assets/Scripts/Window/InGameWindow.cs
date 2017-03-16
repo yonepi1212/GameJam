@@ -11,7 +11,7 @@ public class InGameWindow : WindowBase
 	[System.Serializable]
 	public class Holder
 	{
-		public ScreenBase InGameUiScreen;
+		public ScreenBase InGameScreen;
 		//public ControllerBase TalkController;
 	}
 
@@ -20,9 +20,9 @@ public class InGameWindow : WindowBase
 	private Holder _prefabs = null;
 
 	// スクリーンのプロパティ
-	public InGameUiScreen InGameUiScreen {
+	public InGameScreen InGameScreen {
 		get {
-			return ScreenShelf.SetBook (_prefabs.InGameUiScreen) as InGameUiScreen;
+			return ScreenShelf.SetBook (_prefabs.InGameScreen) as InGameScreen;
 		}
 	}
 
@@ -40,7 +40,7 @@ public class InGameWindow : WindowBase
 	public override void Show ()
 	{
 		base.Show ();
-		InGameUiScreen.Show ();
+		InGameScreen.Show ();
 	}
 
 	#endregion
