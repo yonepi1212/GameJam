@@ -63,13 +63,6 @@ public static class Common
 	// AddOnManagerrのインスタンス
 	public static AddOnManager AddOn = null;
 
-	// サウンドマネージャーのインスタンス
-	public static SoundManager Sound {
-		get { return SoundManager.Instance; }
-	}
-
-
-
 
 	// カメラマネージャーのインスタンス
 	public static CameraManager Camera {

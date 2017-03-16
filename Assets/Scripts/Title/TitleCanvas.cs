@@ -30,7 +30,6 @@ public class TitleCanvas : CanvasBase
 		// ボタンのイベント登録
 		StartButton.OnClickAsObservable ()
             .Subscribe ((_) => Common.Transition.TransitionIn (TransitionManager.Kind.White, Define.Window.TransitionTime, () => {
-			Common.Sound.PlaySE (SoundKind.SE_01_Top_StartButton);
 			SceneManager.LoadScene ("InGame");
 			Common.Transition.TransitionOut (TransitionManager.Kind.White, Define.Window.TransitionTime);
 		}));
