@@ -81,6 +81,9 @@ public static class Common
 		get { return InputManager.Instance; }
 	}
 
+	public static StageManager Stage {
+		get { return StageManager.Instance; }
+	}
 
 	#endregion
 

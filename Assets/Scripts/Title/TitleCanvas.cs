@@ -30,6 +30,8 @@ public class TitleCanvas : CanvasBase
 		// ボタンのイベント登録
 		StartButton.OnClickAsObservable ().Subscribe (_ => {
 			SceneManager.LoadScene ("InGame");
+			Common.Stage.IsGameOver.Value = false;
+
 		});
 	}
 

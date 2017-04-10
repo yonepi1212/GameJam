@@ -18,6 +18,9 @@ public class InGameUiScreen : ScreenBase
 	private ControlButtons _controllButtons;
 
 
+	[SerializeField]
+	private RectTransform _gameOver;
+
 	#endregion
 
 	#region Public Method
@@ -28,6 +31,7 @@ public class InGameUiScreen : ScreenBase
 
 		_controllButtons.Show ();
 	
+		_gameOver.gameObject.SetActive (false);
 
 		_stageInfo.gameObject.SetActive (true);
 
@@ -51,6 +55,15 @@ public class InGameUiScreen : ScreenBase
 		}
 
 
+		Common.Stage.IsGameOver.Subscribe (ShowGameOver);
+
+	}
+
+	private void ShowGameOver (bool isOver)
+	{
+		if ( _gameOver != null ) {
+			_gameOver.gameObject.SetActive (isOver);
+		}
 	}
 
 	#endregion
