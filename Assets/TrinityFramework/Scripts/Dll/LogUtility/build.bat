@@ -1,1 +1,0 @@
-"C:\Program Files\Unity\Editor\Data\Mono\bin\smcs.bat" -r:"C:\Program Files\Unity\Editor\Data\Managed\UnityEngine.dll" -r:"C:\Program Files\Unity\Editor\Data\Managed\UnityEditor.dll" -target:library -out:LogUtility.dll *.cs
