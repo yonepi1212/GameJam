@@ -48,6 +48,9 @@ public class GameManager : MonoBehaviour {
 	private Slider _stageEnemyHpSlider;
 
 	[SerializeField]
+	private Text _currentLevelText;
+
+	[SerializeField]
 	private Text _currentCoinText;
 
 	[SerializeField]
@@ -56,9 +59,11 @@ public class GameManager : MonoBehaviour {
 	[SerializeField]
 	private Text _currentTapDamageText;
 
+	[SerializeField]
+	private EnemyImage _enemyImage;
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 
 		_levelUpButton.onClick.AddListener (LevelUp);
 
@@ -72,12 +77,15 @@ public class GameManager : MonoBehaviour {
 			NextLevelCoin = new DoubleReactiveProperty(1),
 		};
 
-		CurrentEnemy = GenerateEnemy(1,10);
-		CurrentEnemy.CurrentHp.Value = 10;
-		CurrentEnemy.MaxHp.Value = 10;
+		CurrentEnemy = GenerateFirstEnemy(1,10);
 
 		CurrentStatus.StageNumber.Subscribe (number => {
 			_stageNumberText.text = String.Format("{0:F0}",number);
+		});
+
+		CurrentStatus.CurrentMyLevel.Subscribe(level =>
+		{
+			_currentLevelText.text = String.Format("{0:F0}", level);
 		});
 
 		CurrentStatus.CurrentCoin.Subscribe (coin => {
@@ -92,11 +100,6 @@ public class GameManager : MonoBehaviour {
 			
 			_currentTapDamageText.text = String.Format("{0:F1}",damage);
 		});
-
-//		CurrentEnemy.CurrentHp.Subscribe (hp => {
-//			var ratio = hp / CurrentEnemy.MaxHp.Value;
-//			_stageEnemyHpSlider.value = ratio;
-//		});
 
 	}
 	
@@ -146,6 +149,7 @@ public class GameManager : MonoBehaviour {
 			CurrentStatus.CurrentCoin.Value -= CurrentStatus.NextLevelCoin.Value;
 
 			CurrentStatus.NextLevelCoin.Value *= 1.1f;
+			CurrentStatus.CurrentMyLevel.Value++;
 			Debug.Log ("Level Up!!");
 
 		} else {
@@ -153,6 +157,28 @@ public class GameManager : MonoBehaviour {
 			Debug.Log ("No Level Up");
 
 		}
+	}
+
+	private Enemy GenerateFirstEnemy(int level, double hp)
+	{
+		Enemy enemy = new Enemy();
+		enemy.MaxHp = new DoubleReactiveProperty(hp);
+		enemy.CurrentHp = new DoubleReactiveProperty(hp);
+		enemy.Coin = level;
+		enemy.Type = (level % 10 == 0) ? Enemy.EnemyType.Boss : Enemy.EnemyType.Zako;
+
+		enemy.CurrentHp.Subscribe(currentHp =>
+		{
+			float ratio = (float)currentHp / (float)enemy.MaxHp.Value;
+			var hpString = String.Format("{0:F1}/{1:F1}", currentHp, enemy.MaxHp.Value);
+
+			_hpText.text = hpString;
+			_stageEnemyHpSlider.value = ratio;
+			
+			_enemyImage.SetDark(1-ratio);
+		});
+
+		return enemy;
 	}
 
 	private Enemy GenerateEnemy(int level,double prevHp)
@@ -171,7 +197,11 @@ public class GameManager : MonoBehaviour {
 
 			_hpText.text = hpString;
 			_stageEnemyHpSlider.value = ratio;
+
+			_enemyImage.SetDark(1-ratio);
 		});
+
+		_enemyImage.SetRandomSpriteZako ();
 
 		return enemy;
 	}
