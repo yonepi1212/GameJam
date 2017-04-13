@@ -72,8 +72,9 @@ public class GameManager : MonoBehaviour {
 			NextLevelCoin = new DoubleReactiveProperty(1),
 		};
 
-		CurrentEnemy = GenerateEnemy(1);
-
+		CurrentEnemy = GenerateEnemy(1,10);
+		CurrentEnemy.CurrentHp.Value = 10;
+		CurrentEnemy.MaxHp.Value = 10;
 
 		CurrentStatus.StageNumber.Subscribe (number => {
 			_stageNumberText.text = String.Format("{0:F0}",number);
@@ -125,7 +126,7 @@ public class GameManager : MonoBehaviour {
 
 
 			//CurrentStatus.CurrentMyLevel.Value = CurrentStatus.CurrentMyLevel.Value + 1;
-			CurrentEnemy = GenerateEnemy (nextStageNumber);
+			CurrentEnemy = GenerateEnemy (nextStageNumber,CurrentEnemy.MaxHp.Value);
 		}
 
 	}
@@ -154,11 +155,11 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
-	private Enemy GenerateEnemy(int level)
+	private Enemy GenerateEnemy(int level,double prevHp)
 	{
 		Enemy enemy = new Enemy();
-		enemy.MaxHp = new DoubleReactiveProperty(level * 10);
-		enemy.CurrentHp = new DoubleReactiveProperty(level * 10);
+		enemy.MaxHp = new DoubleReactiveProperty(prevHp * 1.1f);
+		enemy.CurrentHp = new DoubleReactiveProperty(enemy.MaxHp.Value);
 		enemy.Coin = level;
 		enemy.Type = (level % 10 == 0) ? Enemy.EnemyType.Boss : Enemy.EnemyType.Zako;
 
