@@ -16,6 +16,9 @@ public class EnemyImage : MonoBehaviour {
 	private List<Sprite> _zakoSpriteList;
 
 	[SerializeField]
+	private List<Sprite> _bossSpriteList;
+
+	[SerializeField]
 	private Color _currentDarkColor = Color.white;
 
 	// Use this for initialization
@@ -32,6 +35,15 @@ public class EnemyImage : MonoBehaviour {
 	{
 		var sprite = _zakoSpriteList[Random.Range(0,_zakoSpriteList.Count)];
 		_image.sprite = sprite;
+		gameObject.transform.localScale = Vector3.one;
+	}
+
+	public void SetRandomSpriteBoss(bool isShigeru)
+	{
+		int spriteIndex = (isShigeru) ? 0 : Random.Range (0, _bossSpriteList.Count);
+		var sprite = _bossSpriteList[spriteIndex];
+		_image.sprite = sprite;
+		gameObject.transform.localScale = Vector3.one;
 	}
 
 	public void SetDark(float value)
@@ -40,5 +52,13 @@ public class EnemyImage : MonoBehaviour {
 
 		_currentDarkColor = new Color (100f/255f,48f/255f,0f,alpha/255f);
 		_darkMaskImage.color = _currentDarkColor;
+
+		ShakeGameObject (gameObject);
+	}
+
+	private void ShakeGameObject(GameObject target)
+	{		
+		target.transform.localScale = Vector3.one;
+		LeanTween.scale (target, new Vector3 (1.05f, 1.05f, 1.0f), 0.16f).setEaseShake ();
 	}
 }

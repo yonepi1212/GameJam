@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 using System;
 using UniRx;
 
@@ -81,24 +82,31 @@ public class GameManager : MonoBehaviour {
 
 		CurrentStatus.StageNumber.Subscribe (number => {
 			_stageNumberText.text = String.Format("{0:F0}",number);
+			ShakeGameObject(_stageNumberText.gameObject);
 		});
 
 		CurrentStatus.CurrentMyLevel.Subscribe(level =>
 		{
 			_currentLevelText.text = String.Format("{0:F0}", level);
+				ShakeGameObject(_currentLevelText.gameObject);
+
 		});
 
 		CurrentStatus.CurrentCoin.Subscribe (coin => {
 			_currentCoinText.text = String.Format("{0:F1}",coin);
+			ShakeGameObject(_currentCoinText.gameObject);
 		});
 
 		CurrentStatus.NextLevelCoin.Subscribe (coin => {
 			_nextCoinText.text = String.Format("{0:F1}",coin);
+			ShakeGameObject(_nextCoinText.gameObject);
 		});
 
 		CurrentStatus.TapDamage.Subscribe (damage => {
 			
 			_currentTapDamageText.text = String.Format("{0:F1}",damage);
+			ShakeGameObject(_currentTapDamageText.gameObject);
+
 		});
 
 	}
@@ -112,6 +120,7 @@ public class GameManager : MonoBehaviour {
 	{
 
 		CurrentEnemy.CurrentHp.Value -= CurrentStatus.TapDamage.Value;
+		ShowDamage (CurrentStatus.TapDamage.Value);
 
 //		Debug.Log ("ザコHP:" + CurrentEnemy.CurrentHp.Value);
 //		Debug.Log ("ザコMAXHP:" + CurrentEnemy.MaxHp.Value);
@@ -119,7 +128,6 @@ public class GameManager : MonoBehaviour {
 //		Debug.Log ("パワー:" + CurrentStatus.TapDamage.Value);
 
 		if (CurrentEnemy.CurrentHp.Value < 0) {
-			Debug.Log ("ザコ撃破");
 
 			BreakEnemy ();
 
@@ -201,8 +209,78 @@ public class GameManager : MonoBehaviour {
 			_enemyImage.SetDark(1-ratio);
 		});
 
-		_enemyImage.SetRandomSpriteZako ();
+		if (enemy.Type == Enemy.EnemyType.Zako) {
+			_enemyImage.SetRandomSpriteZako ();
+		} else {
+			if (level == 10) {
+				_enemyImage.SetRandomSpriteBoss (true);
+			} else {
+				_enemyImage.SetRandomSpriteBoss (false);
+			}
+		}
 
 		return enemy;
+	}
+
+	private void ShakeGameObject(GameObject target)
+	{		
+		target.transform.localScale = Vector3.one;
+		LeanTween.scale (target, new Vector3 (1.05f, 1.05f, 1.05f), 0.16f).setEaseShake ();
+	}
+
+
+
+	[SerializeField]
+	private Font _myFont;
+	[SerializeField]
+	Transform _areaTopLeft;
+	[SerializeField]
+	Transform _areaBottomRight;
+	[SerializeField]
+	Canvas _canvasObject;
+
+	private void ShowDamage(double damage)
+	{
+		// ダメージ表示オブジェクト生成
+		GameObject damage1TextObject = new GameObject ();
+
+		// Textをつける
+		damage1TextObject.AddComponent<Text> ();
+
+		// canvas下に(canvasはフィールド宣言)
+		damage1TextObject.transform.SetParent (_canvasObject.transform, false);
+
+		// 初期位置（一定範囲内ランダム）areaTopLeft,areaBottomRightはフィールド宣言
+		damage1TextObject.transform.position = new Vector3 (
+			Random.Range (_areaTopLeft.position.x, _areaBottomRight.position.x),
+			Random.Range (_areaBottomRight.position.y, _areaTopLeft.position.y),
+			_areaTopLeft.position.z);
+
+		// ダメージ数値整形
+		var damageStr = String.Format("{0:F1}",damage);
+
+
+		// テキスト編集
+		Text damage1Text = damage1TextObject.GetComponent<Text> ();
+		damage1Text.text = damageStr;
+		damage1Text.font = _myFont;//fontはフィールドで。
+		damage1Text.fontSize = 32;
+		damage1Text.alignment = TextAnchor.MiddleCenter;
+		damage1Text.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+		LeanTween.moveLocalY (damage1TextObject, 320.0f, 0.3f);
+
+		// 上に消えていく
+//		iTween.MoveBy (damage1TextObject, iTween.Hash ("y", 1f, "time", 0.5f));
+//		iTween.ValueTo (gameObject, iTween.Hash ("from", 1, "to", 0, "time", 0.5f,
+//			"onupdate", "ValueChange"));
+
+		//yield return new WaitForSeconds (0.55f);
+		Observable.Timer(TimeSpan.FromSeconds(0.3f)).Subscribe(_=>{
+			Destroy(damage1TextObject);
+		}).AddTo(damage1TextObject);
+
+		// 用済み
+		//Destroy (damage1TextObject); 
 	}
 }
