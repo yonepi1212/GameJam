@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.Events;
 using Random = UnityEngine.Random;
 using System;
 using UniRx;
@@ -63,57 +65,118 @@ public class GameManager : MonoBehaviour {
 	[SerializeField]
 	private EnemyImage _enemyImage;
 
+	[SerializeField]
+	private Button _backButton;
+
+	private float _bossHpGain = 6f;
+
 	// Use this for initialization
 	void Awake () {
 
 		_levelUpButton.onClick.AddListener (LevelUp);
+		_backButton.onClick.AddListener (() => {
+			SceneManager.LoadScene("TitleScene");
+		});
 
 		// TODO:PlayerPrefsから読み込み
 
+		int stageNum = 1;
+		double tapDamage = 1d;
+		double currentCoin = 0d;
+		int currentMyLevel = 1;
+		double nextLevelCoin = 1d;
+		double lastCharacterHp = 10d;
+
+
+		if(PlayerPrefs.HasKey("LastStageNumber"))
+			stageNum = PlayerPrefs.GetInt ("LastStageNumber");
+
+		if(PlayerPrefs.HasKey("LastMyLevel"))
+			currentMyLevel = PlayerPrefs.GetInt ("LastMyLevel");
+
+		if(PlayerPrefs.HasKey("LastMyCoin"))
+			currentCoin = PlayerPrefs.GetFloat ("LastMyCoin");
+		
+		if(PlayerPrefs.HasKey("LastMyNextCoin"))
+			nextLevelCoin = PlayerPrefs.GetFloat ("LastMyNextCoin");
+
+		if(PlayerPrefs.HasKey("LastTapDamage"))
+			tapDamage = PlayerPrefs.GetFloat ("LastTapDamage");
+
+		if(PlayerPrefs.HasKey("LastCharacterHp"))
+			lastCharacterHp = PlayerPrefs.GetFloat ("LastCharacterHp");
+
+
+
 		CurrentStatus = new Status(){
-			StageNumber = new IntReactiveProperty(1),
-			TapDamage = new DoubleReactiveProperty(1),
-			CurrentCoin =  new DoubleReactiveProperty(0),
-			CurrentMyLevel = new IntReactiveProperty(1),
-			NextLevelCoin = new DoubleReactiveProperty(1),
+			StageNumber = new IntReactiveProperty(stageNum),
+			TapDamage = new DoubleReactiveProperty(tapDamage),
+			CurrentCoin =  new DoubleReactiveProperty(currentCoin),
+			CurrentMyLevel = new IntReactiveProperty(currentMyLevel),
+			NextLevelCoin = new DoubleReactiveProperty(nextLevelCoin),
 		};
 
-		CurrentEnemy = GenerateFirstEnemy(1,10);
+		if (stageNum == 1) {
+			CurrentEnemy = GenerateFirstEnemy (stageNum, lastCharacterHp);
+		} else {
+			CurrentEnemy = GenerateEnemy (stageNum, lastCharacterHp);
+		}
+
+		var isBoss = (stageNum % 10 == 0);
+		if (isBoss) {
+			_enemyImage.SetRandomSpriteBoss (false);
+		} else {
+			_enemyImage.SetRandomSpriteZako ();
+		}
 
 		CurrentStatus.StageNumber.Subscribe (number => {
 			_stageNumberText.text = String.Format("{0:F0}",number);
 			ShakeGameObject(_stageNumberText.gameObject);
+			PlayerPrefs.SetInt ("LastStageNumber", number);
 		});
 
 		CurrentStatus.CurrentMyLevel.Subscribe(level =>
 		{
 			_currentLevelText.text = String.Format("{0:F0}", level);
 				ShakeGameObject(_currentLevelText.gameObject);
+			PlayerPrefs.SetInt ("LastMyLevel", level);
 
 		});
 
 		CurrentStatus.CurrentCoin.Subscribe (coin => {
 			_currentCoinText.text = String.Format("{0:F1}",coin);
 			ShakeGameObject(_currentCoinText.gameObject);
+			PlayerPrefs.SetFloat ("LastMyCoin", (float)coin);
+
 		});
 
 		CurrentStatus.NextLevelCoin.Subscribe (coin => {
 			_nextCoinText.text = String.Format("{0:F1}",coin);
 			ShakeGameObject(_nextCoinText.gameObject);
+			PlayerPrefs.SetFloat ("LastMyNextCoin",  (float)coin);
+
 		});
 
 		CurrentStatus.TapDamage.Subscribe (damage => {
 			
 			_currentTapDamageText.text = String.Format("{0:F1}",damage);
 			ShakeGameObject(_currentTapDamageText.gameObject);
+			PlayerPrefs.SetFloat ("LastTapDamage",  (float)damage);
 
 		});
+			
+		UnityAction bossTimeOut = () => {
+			Return10Stage();
+		};
+		_enemyImage.OnBossTimeOut = bossTimeOut;
 
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		
+		if (Input.GetKeyDown (KeyCode.Space)) {
+			Return10Stage ();
+		}
 	}
 
 	public void OnTaped()
@@ -121,11 +184,6 @@ public class GameManager : MonoBehaviour {
 
 		CurrentEnemy.CurrentHp.Value -= CurrentStatus.TapDamage.Value;
 		ShowDamage (CurrentStatus.TapDamage.Value);
-
-//		Debug.Log ("ザコHP:" + CurrentEnemy.CurrentHp.Value);
-//		Debug.Log ("ザコMAXHP:" + CurrentEnemy.MaxHp.Value);
-//
-//		Debug.Log ("パワー:" + CurrentStatus.TapDamage.Value);
 
 		if (CurrentEnemy.CurrentHp.Value < 0) {
 
@@ -136,8 +194,17 @@ public class GameManager : MonoBehaviour {
 			CurrentStatus.StageNumber.Value = nextStageNumber;
 
 
-			//CurrentStatus.CurrentMyLevel.Value = CurrentStatus.CurrentMyLevel.Value + 1;
-			CurrentEnemy = GenerateEnemy (nextStageNumber,CurrentEnemy.MaxHp.Value);
+			var nextCharacterHp = 0d;
+			if (CurrentEnemy.Type == Enemy.EnemyType.Boss) {
+				nextCharacterHp = CurrentEnemy.MaxHp.Value / _bossHpGain;
+				CurrentEnemy = GenerateEnemy (nextStageNumber,nextCharacterHp);
+			} else {
+				nextCharacterHp = CurrentEnemy.MaxHp.Value;
+				CurrentEnemy = GenerateEnemy (nextStageNumber,nextCharacterHp);
+			}
+
+			PlayerPrefs.SetFloat ("LastCharacterHp", (float)nextCharacterHp);
+
 		}
 
 	}
@@ -191,11 +258,14 @@ public class GameManager : MonoBehaviour {
 
 	private Enemy GenerateEnemy(int level,double prevHp)
 	{
+
 		Enemy enemy = new Enemy();
-		enemy.MaxHp = new DoubleReactiveProperty(prevHp * 1.1f);
+		enemy.Type = (level % 10 == 0) ? Enemy.EnemyType.Boss : Enemy.EnemyType.Zako;
+
+		var enemyHp = (enemy.Type == Enemy.EnemyType.Boss) ? new DoubleReactiveProperty(prevHp * 1.1f * _bossHpGain) : new DoubleReactiveProperty(prevHp * 1.1f);
+		enemy.MaxHp = enemyHp;
 		enemy.CurrentHp = new DoubleReactiveProperty(enemy.MaxHp.Value);
 		enemy.Coin = level;
-		enemy.Type = (level % 10 == 0) ? Enemy.EnemyType.Boss : Enemy.EnemyType.Zako;
 
 		enemy.CurrentHp.Subscribe (hp => {
 			float ratio = (float)hp / (float)enemy.MaxHp.Value;
@@ -220,6 +290,27 @@ public class GameManager : MonoBehaviour {
 		}
 
 		return enemy;
+	}
+
+	private void Return10Stage()
+	{
+		if (CurrentEnemy.Type == Enemy.EnemyType.Boss) {
+
+			// ステージ番号更新
+			var nextStageNumber = CurrentStatus.StageNumber.Value - 9;
+			CurrentStatus.StageNumber.Value = nextStageNumber;
+
+			var nextCharacterHp = 0d;
+			if (CurrentEnemy.Type == Enemy.EnemyType.Boss) {
+				nextCharacterHp = (CurrentEnemy.MaxHp.Value / _bossHpGain) / 2.5937f;
+				CurrentEnemy = GenerateEnemy (nextStageNumber,nextCharacterHp);
+			} else {
+				nextCharacterHp = CurrentEnemy.MaxHp.Value / 2.5937f;
+				CurrentEnemy = GenerateEnemy (nextStageNumber,nextCharacterHp);
+			}
+
+			PlayerPrefs.SetFloat ("LastCharacterHp", (float)nextCharacterHp);
+		}
 	}
 
 	private void ShakeGameObject(GameObject target)
@@ -255,6 +346,8 @@ public class GameManager : MonoBehaviour {
 			Random.Range (_areaTopLeft.position.x, _areaBottomRight.position.x),
 			Random.Range (_areaBottomRight.position.y, _areaTopLeft.position.y),
 			_areaTopLeft.position.z);
+		damage1TextObject.transform.localScale = new Vector3 (1f, 1.2f, 1f);
+
 
 		// ダメージ数値整形
 		var damageStr = String.Format("{0:F1}",damage);
@@ -265,17 +358,16 @@ public class GameManager : MonoBehaviour {
 		damage1Text.text = damageStr;
 		damage1Text.font = _myFont;//fontはフィールドで。
 		damage1Text.fontSize = 32;
+		damage1Text.fontStyle = FontStyle.Bold;
 		damage1Text.alignment = TextAnchor.MiddleCenter;
 		damage1Text.horizontalOverflow = HorizontalWrapMode.Overflow;
 
-		LeanTween.moveLocalY (damage1TextObject, 320.0f, 0.3f);
+		RectTransform damageTextRect = damage1TextObject.GetComponent<RectTransform> ();
+
+		LeanTween.moveLocalY (damage1TextObject, 200.0f, 0.3f);
+		LeanTween.color (damageTextRect, new Color (1, 1, 1, 0), 0.3f).setEaseOutElastic ();
 
 		// 上に消えていく
-//		iTween.MoveBy (damage1TextObject, iTween.Hash ("y", 1f, "time", 0.5f));
-//		iTween.ValueTo (gameObject, iTween.Hash ("from", 1, "to", 0, "time", 0.5f,
-//			"onupdate", "ValueChange"));
-
-		//yield return new WaitForSeconds (0.55f);
 		Observable.Timer(TimeSpan.FromSeconds(0.3f)).Subscribe(_=>{
 			Destroy(damage1TextObject);
 		}).AddTo(damage1TextObject);

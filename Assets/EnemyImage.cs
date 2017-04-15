@@ -2,9 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
+using UniRx;
+
 
 
 public class EnemyImage : MonoBehaviour {
+
+	public UnityAction OnBossTimeOut;
+
 
 	[SerializeField]
 	private Image _image;
@@ -21,6 +27,14 @@ public class EnemyImage : MonoBehaviour {
 	[SerializeField]
 	private Color _currentDarkColor = Color.white;
 
+	[SerializeField]
+	private Slider _bossTimerSlider;
+
+	[SerializeField]
+	private Text _bossTimerText;
+
+
+
 	// Use this for initialization
 	void Start () {
 		
@@ -36,6 +50,8 @@ public class EnemyImage : MonoBehaviour {
 		var sprite = _zakoSpriteList[Random.Range(0,_zakoSpriteList.Count)];
 		_image.sprite = sprite;
 		gameObject.transform.localScale = Vector3.one;
+
+		_bossTimerSlider.gameObject.SetActive (false);
 	}
 
 	public void SetRandomSpriteBoss(bool isShigeru)
@@ -44,6 +60,9 @@ public class EnemyImage : MonoBehaviour {
 		var sprite = _bossSpriteList[spriteIndex];
 		_image.sprite = sprite;
 		gameObject.transform.localScale = Vector3.one;
+		_bossTimerSlider.gameObject.SetActive (true);
+		StartBossTimer ();
+
 	}
 
 	public void SetDark(float value)
@@ -56,9 +75,28 @@ public class EnemyImage : MonoBehaviour {
 		ShakeGameObject (gameObject);
 	}
 
+	private void StartBossTimer()
+	{
+		float elapsedTime = 0f;
+		var bossTimeLimit = 10f;
+		Observable.EveryUpdate ().TakeWhile (time => elapsedTime < bossTimeLimit).Subscribe (time => {
+			elapsedTime += Time.deltaTime;
+			_bossTimerSlider.value = (1-(elapsedTime/bossTimeLimit));
+			_bossTimerText.text = string.Format("{0:F1} sec",bossTimeLimit - elapsedTime);
+		},()=>{
+			if(OnBossTimeOut != null)
+			{
+				OnBossTimeOut();
+			}
+		});
+	}
+
+
 	private void ShakeGameObject(GameObject target)
 	{		
 		target.transform.localScale = Vector3.one;
 		LeanTween.scale (target, new Vector3 (1.05f, 1.05f, 1.0f), 0.16f).setEaseShake ();
 	}
+
+
 }
