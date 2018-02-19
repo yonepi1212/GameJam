@@ -11,10 +11,21 @@ public class TitleWindow : MonoBehaviour {
 
 	public Button ContinueButton;
 
+	private SoundManager _soundManager;
+
+	public TutorialImage _tutorialImage;
+
+	void Awake()
+	{
+		_soundManager = GameObject.Find ("SoundManager").GetComponent<SoundManager> ();
+	}
+
 	// Use this for initialization
 	void Start () {
 		NewGameButton.onClick.AddListener (StartNewGame);
 		ContinueButton.onClick.AddListener (StartContinue);
+		_soundManager.BgmManager.PlayBGM (0);
+
 	}
 	
 	// Update is called once per frame
@@ -27,7 +38,9 @@ public class TitleWindow : MonoBehaviour {
 	{
 		Debug.Log ("初めから");
 		PlayerPrefs.DeleteAll ();
-		SceneManager.LoadScene ("IngameScene");
+		//SceneManager.LoadScene ("IngameScene");
+		_tutorialImage.gameObject.SetActive(true);
+		_tutorialImage.StartTextAndNextScene();
 	}
 
 	private void StartContinue()

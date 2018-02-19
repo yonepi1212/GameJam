@@ -39,6 +39,9 @@ public class GameManager : MonoBehaviour {
 	public Enemy NextEnemy;
 
 	[SerializeField]
+	private SoundManager _soundManager;
+
+	[SerializeField]
 	private Button _levelUpButton;
 
 	[SerializeField]
@@ -73,7 +76,10 @@ public class GameManager : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 
-		_levelUpButton.onClick.AddListener (LevelUp);
+		_levelUpButton.onClick.AddListener (()=>{
+			LevelUp();
+			}
+		);
 		_backButton.onClick.AddListener (() => {
 			SceneManager.LoadScene("TitleScene");
 		});
@@ -138,31 +144,26 @@ public class GameManager : MonoBehaviour {
 		CurrentStatus.CurrentMyLevel.Subscribe(level =>
 		{
 			_currentLevelText.text = String.Format("{0:F0}", level);
-				ShakeGameObject(_currentLevelText.gameObject);
+			ShakeGameObject(_currentLevelText.gameObject);
 			PlayerPrefs.SetInt ("LastMyLevel", level);
-
 		});
 
 		CurrentStatus.CurrentCoin.Subscribe (coin => {
 			_currentCoinText.text = String.Format("{0:F1}",coin);
 			ShakeGameObject(_currentCoinText.gameObject);
 			PlayerPrefs.SetFloat ("LastMyCoin", (float)coin);
-
 		});
 
 		CurrentStatus.NextLevelCoin.Subscribe (coin => {
 			_nextCoinText.text = String.Format("{0:F1}",coin);
 			ShakeGameObject(_nextCoinText.gameObject);
 			PlayerPrefs.SetFloat ("LastMyNextCoin",  (float)coin);
-
 		});
 
 		CurrentStatus.TapDamage.Subscribe (damage => {
-			
 			_currentTapDamageText.text = String.Format("{0:F1}",damage);
 			ShakeGameObject(_currentTapDamageText.gameObject);
 			PlayerPrefs.SetFloat ("LastTapDamage",  (float)damage);
-
 		});
 			
 		UnityAction bossTimeOut = () => {
@@ -170,6 +171,8 @@ public class GameManager : MonoBehaviour {
 		};
 		_enemyImage.OnBossTimeOut = bossTimeOut;
 
+
+		_soundManager.BgmManager.PlayBGM (1);
 	}
 	
 	// Update is called once per frame
@@ -181,6 +184,8 @@ public class GameManager : MonoBehaviour {
 
 	public void OnTaped()
 	{
+
+		_soundManager.SeManager.PlaySE (1);
 
 		CurrentEnemy.CurrentHp.Value -= CurrentStatus.TapDamage.Value;
 		ShowDamage (CurrentStatus.TapDamage.Value);
@@ -220,6 +225,8 @@ public class GameManager : MonoBehaviour {
 	{
 		if (CurrentStatus.CurrentCoin.Value >= CurrentStatus.NextLevelCoin.Value) {
 			// レベルアップ
+			_soundManager.SeManager.PlaySE (0);
+
 			CurrentStatus.TapDamage.Value *= 1.1f;
 			CurrentStatus.CurrentCoin.Value -= CurrentStatus.NextLevelCoin.Value;
 
@@ -281,12 +288,15 @@ public class GameManager : MonoBehaviour {
 
 		if (enemy.Type == Enemy.EnemyType.Zako) {
 			_enemyImage.SetRandomSpriteZako ();
+			_soundManager.BgmManager.PlayBGM (1);
 		} else {
 			if (level == 10) {
 				_enemyImage.SetRandomSpriteBoss (true);
 			} else {
 				_enemyImage.SetRandomSpriteBoss (false);
 			}
+			_soundManager.BgmManager.PlayBGM (2);
+
 		}
 
 		return enemy;
@@ -316,7 +326,7 @@ public class GameManager : MonoBehaviour {
 	private void ShakeGameObject(GameObject target)
 	{		
 		target.transform.localScale = Vector3.one;
-		LeanTween.scale (target, new Vector3 (1.05f, 1.05f, 1.05f), 0.16f).setEaseShake ();
+		LeanTween.scale (target, new Vector3 (1.05f, 1.05f, 1.05f), 0.16f).setEaseInBounce ();
 	}
 
 

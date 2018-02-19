@@ -69,7 +69,7 @@ public class EnemyImage : MonoBehaviour {
 	{
 		float alpha = 190 * value;
 
-		_currentDarkColor = new Color (100f/255f,48f/255f,0f,alpha/255f);
+		_currentDarkColor = new Color (64f/255f,25f/255f,0f,alpha/255f);
 		_darkMaskImage.color = _currentDarkColor;
 
 		ShakeGameObject (gameObject);
